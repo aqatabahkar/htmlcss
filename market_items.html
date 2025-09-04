@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory Grid — Structure First</title>
+  
+  <!-- Filter Component CSS -->
+  <link rel="stylesheet" href="filter-component.css" />
+  
+  <style>
+    /* --- TOPBAR STYLES --------------------------------------------------- */
+    /* Topbar */
+    .market_items_topbar{
+      position:sticky; top:0; z-index:30;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px;
+      padding:14px 18px;
+      backdrop-filter:saturate(1.2) blur(12px);
+      background:linear-gradient(180deg, rgba(8,12,20,.65), rgba(8,12,20,.35));
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+
+    .market_items_topbar__left{
+      display:flex; align-items:center; gap:18px;
+    }
+    .market_items_logo{ display:flex; align-items:center; gap:10px; }
+    .market_items_logo__mark{
+      width:32px; height:32px; display:grid; place-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0));
+      border-radius:10px; box-shadow:0 0 0 1px rgba(255,255,255,0.06) inset, 0 1px 0 rgba(255,255,255,.06) inset;
+    }
+    .market_items_logo__mark svg{ width:22px; height:22px; }
+    .market_items_logo__text{ font-weight:800; letter-spacing:.4px; font-size:18px; color:#E9F0FF; }
+
+    .market_items_nav{ display:flex; align-items:center; gap:12px; }
+    .market_items_nav__link{
+      color:#9FB0C9; text-decoration:none; font-weight:600;
+      padding:10px 12px; border-radius:12px;
+    }
+    .market_items_nav__link:hover{ background:rgba(255,255,255,.04); color:#E9F0FF; }
+
+    .market_items_topbar__right{ display:flex; align-items:center; gap:10px; }
+
+    .market_items_wallet_card{
+      position:relative; display:flex; align-items:center; gap:10px;
+    }
+    .market_items_wallet_card::before{
+      content:""; position:absolute; z-index:-1;
+      left:-6px; right:-24px; top:-3px; bottom:-3px;
+      border-radius:18px;
+      background: linear-gradient(180deg,#0E1524 0%, #0B111E 100%);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(0,0,0,.32);
+      -webkit-mask-image: linear-gradient(to right, #000 68%, rgba(0,0,0,.6) 84%, transparent 100%);
+      mask-image: linear-gradient(to right, #000 68%, rgba(0,0,0,.6) 84%, transparent 100%);
+      pointer-events:none;
+    }
+
+    .market_items_balance{
+      display:flex; align-items:center; gap:8px; padding:8px 10px;
+      background:linear-gradient(180deg,#0C1320,#0E1726);border-radius: 10px;
+    }
+    .market_items_balance__amount{ font-weight:700; color:#E9F0FF; }
+
+    .market_items_coin{ width:20px; height:20px; display:inline-grid; place-items:center; }
+    .market_items_coin svg{ width:100%; height:100%; }
+
+    /* Toman currency icon */
+    .market_items_toman_icon{
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .market_items_toman_icon svg{
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    .market_items_btn_topbar{
+      appearance:none; border:none; color:#0B0E16; font-weight:800; letter-spacing:.2px;
+      padding:9px 14px; border-radius:14px; cursor:pointer; position:relative;
+      background:linear-gradient(180deg,#FFE788 0%, #FFD34D 55%, #FFBD3D 100%);
+      box-shadow: 0 8px 20px rgba(255,198,54,.25), inset 0 1px 0 rgba(255,255,255,.8);
+      height:33px; border-radius: 10px;
+    }
+    .market_items_btn_topbar__dot{
+      width:10px; height:10px; border-radius:10px; background:#0B0E16; display:inline-block; margin-right:8px;
+      box-shadow:0 0 0 3px rgba(11,14,22,.2);
+    }
+
+    .market_items_chip{
+      border:none; background:rgba(255,255,255,.04); color:#E9F0FF;
+      padding:8px 12px; border-radius:12px; font-weight:700; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+      border:1px solid rgba(255,255,255,0.06);
+    }
+    .market_items_caret{
+      width:8px; height:8px; border-right:2px solid rgba(255,255,255,.7); border-bottom:2px solid rgba(255,255,255,.7); transform:rotate(45deg);
+    }
+
+    .market_items_profile{
+      height:40px; display:flex; align-items:center; gap:8px;
+      padding:4px 8px 4px 4px; border-radius: 10px 10px 10px 19px; border:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg,#101727,#0C1422);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      color:#EAF0FF; cursor:pointer;
+    }
+    .market_items_avatar{
+      width:30px; height:30px; border-radius:50%; display:block; object-fit:cover;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.06) inset, 0 4px 10px rgba(0,0,0,.4);
+    }
+    
+    /* --- FONTS ----------------------------------------------------------- */
+    @font-face {
+      font-family: 'IRANSansWeb';
+      src: url('./fonts/IRANSansWeb.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* --- THEME ----------------------------------------------------------- */
+    :root{
+      /* keep the original background color as requested */
+      --bg-page: #0e1627; /* from your earlier build */
+
+      /* neutrals */
+      --ink: #e8edf7;
+      --ink-dim: #b6bfd3;
+      --ink-mute: #8a93a8;
+
+      /* surfaces */
+      --card-bg: #121119;        /* card fill */
+      --card-stroke: #1a2235;    /* subtle border */
+      --card-shadow: 0 6px 24px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.02) inset;
+
+      /* layout */
+      --radius: 0px;
+      --pad: 16px;
+      --gap: 1px;
+      --row-gap: 1px;
+
+      /* type scale */
+      --fs-xxs: 10px;
+      --fs-xs: 12px;
+      --fs-sm: 13px;
+      --fs-md: 14px;
+      --fs-lg: 15px;
+      --fs-xl: 18px; /* price */
+
+      /* button */
+      --btn-bg: #1a2336;
+      --btn-bg-2: #111827;
+      --btn-stroke: #222c41;
+    }
+
+    /* --- PAGE ------------------------------------------------------------ */
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: #13121a;
+      color: var(--ink);
+      font: 500 14px/1.4 'IRANSansWeb', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .market_items_market{
+      display: flex;
+      gap: 24px;
+      max-width: 1440px;
+      margin: 28px auto 80px;
+      padding: 0 24px;
+      align-items: flex-start;
+    }
+
+    .market_items_market__content{
+      flex: 1;
+    }
+
+    .market_items_market__grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--gap);
+      row-gap: var(--row-gap);
+      margin-right: -190px;
+    }
+
+    /* --- CARD ------------------------------------------------------------ */
+    .market_items_item_card{
+      position: relative;
+      display: grid;
+      grid-template-rows: auto auto 150px auto auto; /* meta, title, media, pricing, cta */
+      padding: var(--pad);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #ffffff05, #ffffff00) , var(--card-bg);
+      /*border: 1px solid var(--card-stroke);*/
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      min-height: 330px; /* close to the reference */
+      isolation: isolate;
+    }
+
+    /* subtle vignette like the reference (structure-level, safe to keep) */
+    .market_items_item_card::before{
+      content: "";
+      position: absolute; inset: 0;
+      background: radial-gradient(80% 70% at 50% 45%, rgba(55,82,132,.25), transparent 60%);
+      opacity: .55;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .market_items_item_card__meta{
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 8px;
+      font-size: var(--fs-xs);
+      color: var(--ink-mute);
+      letter-spacing: .2px;
+    }
+    .market_items_item_card__meta .market_items_left{display:flex; gap:6px; align-items:center;}
+    .market_items_badge{font-size: var(--fs-xs); opacity:.85}
+    .market_items_star{color:#f2c94c; opacity:.9}
+
+    .market_items_item_card__title{
+      margin: 6px 0 8px;
+      font-size: var(--fs-lg);
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .market_items_item_card__media{
+      position: relative; z-index: 1;
+      display: grid; place-items: center;
+      height: 150px;
+      margin: 6px 0 8px;
+    }
+    .market_items_item_card__stage{ /* soft spotlight under the item */
+      position:absolute; inset:0; z-index:0;
+      background: radial-gradient(60% 50% at 50% 55%, rgba(27,45,79,.55), transparent 70%);
+      opacity:.6;
+    }
+    .market_items_item_card__img{
+      position: relative; z-index: 1;
+      max-width: 92%; max-height: 92%;
+      object-fit: contain; filter: drop-shadow(0 6px 24px rgba(0,0,0,.65));
+    }
+
+    .market_items_item_card__price{
+      margin: 8px 0 10px;
+      display: grid; gap: 4px;
+    }
+    .market_items_price{font-size: var(--fs-xl); font-weight: 700; letter-spacing:.2px;}
+    .market_items_subprice{font-size: var(--fs-xs); color: var(--ink-mute);}
+
+    .market_items_item_card__cta{margin-top: 4px;}
+    .market_items_btn{
+      width:100%;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: var(--fs-md);
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--btn-bg), var(--btn-bg-2));
+      border: 1px solid var(--btn-stroke);
+      cursor: pointer;
+      user-select: none;
+    }
+    .market_items_btn:focus-visible{outline: 2px solid #3b82f6; outline-offset: 2px;}
+    .market_items_btn:active{transform: translateY(1px);}
+
+    /* compact separators for dense rows (optional) */
+    .market_items_sep{height:1px; background:rgba(255,255,255,.06); margin:8px 0; border-radius:1px}
+
+    /* responsiveness tuning to stay close to 5-up at desktop */
+    @media (min-width: 1280px){
+      .market_items_market__grid{ grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    }
+
+    /* Responsive layout for filter section */
+    @media (max-width: 1023px){
+      .market_items_market{
+        flex-direction: column;
+        gap: 20px;
+      }
+      
+      .market-filter-section{
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 767px){
+      .market_items_market{
+        padding: 16px;
+      }
+      
+      .market_items_market__grid{
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <header class="market_items_topbar">
+    <div class="market_items_topbar__left">
+      <div class="market_items_logo">
+        <div class="market_items_logo__mark">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <defs>
+              <linearGradient id="market_items_g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#FFE065"/>
+                <stop offset="100%" stop-color="#F6B233"/>
+              </linearGradient>
+            </defs>
+            <path d="M15.6 3.5c.5-.7 1.4-.7 1.9 0l9.3 13.4c.5.7.1 1.7-.8 1.9l-5.2 1.2a1.2 1.2 0 0 0-.8.6l-2.4 5a1.2 1.2 0 0 1-2.2 0l-2.4-5a1.2 1.2 0 0 0-.8-.6l-5.2-1.2c-.9-.2-1.2-1.2-.8-1.9L15.6 3.5z" fill="url(#market_items_g1)"/>
+          </svg>
+        </div>
+        <span class="market_items_logo__text">BBDROP</span>
+      </div>
+      <nav class="market_items_nav">
+        <button class="market_items_chip">
+          <img src="./images/united-kingdom.png" width="20px">
+          <span>ENG</span>
+          <span class="market_items_caret"></span>
+        </button>
+        <a class="market_items_nav__link" href="#">Probably Fair</a>
+        <a class="market_items_nav__link" href="#">Daily Bonus</a>
+        <a class="market_items_nav__link" href="#">FAQ</a>
+        <a class="market_items_nav__link" href="#">Top Users</a>
+      </nav>
+    </div>
+
+    <div class="market_items_topbar__right">
+      <!-- Combined wallet card -->
+      <div class="market_items_wallet_card">
+        <div class="market_items_balance">
+          <span class="market_items_coin" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <defs>
+                <linearGradient id="market_items_coinGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#E96AFF"/>
+                  <stop offset="100%" stop-color="#7C5CFF"/>
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="10" fill="url(#market_items_coinGrad)"/>
+              <circle cx="12" cy="12" r="7.5" fill="rgba(255,255,255,.15)"/>
+              <path d="M12 7.5c-2.2 0-4 1.2-4 2.7s1.8 2.8 4 2.8 4 1.1 4 2.7-1.8 2.8-4 2.8-4-1.2-4-2.7" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="market_items_balance__amount">5 600</span>
+        </div>
+        <button class="market_items_btn_topbar">
+          <span class="market_items_btn_topbar__dot"></span>
+          Deposit
+        </button>
+      </div>
+
+      <!-- Profile pill -->
+      <button class="market_items_profile" aria-label="Profile menu">
+        <img class="market_items_avatar" src="https://csgoskin.ir/cdn/avatars/d8a15a7c574f2316623e35dd6990513b.jpg" alt="User" onerror="this.style.background='linear-gradient(180deg,#7C5CFF,#4DA3FF)';this.alt='';this.removeAttribute('src');" />
+        <span class="market_items_caret"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="market_items_market" aria-label="Inventory">
+    <!-- Filter Component -->
+    <aside class="market-filter-section" aria-label="Item filters">
+      <!-- Header -->
+      <header class="market-filter-header">
+        <h1 class="market-filter-title">Filters</h1>
+
+        <!-- Refresh / reset icon (inline SVG, accessible) -->
+        <button class="market-filter-icon-btn" type="button" aria-label="Reset filters">
+          <svg class="market-filter-icon-refresh" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5a7 7 0 1 1-6.32 4H3l3.5-3.5L10 9H7.82A5 5 0 1 0 12 7V5z" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- Price -->
+      <section class="market-filter-group" aria-labelledby="price-heading">
+        <button class="market-filter-group-toggle" type="button" aria-expanded="true" id="price-heading">
+          <span>Price</span>
+          <span class="market-filter-caret" aria-hidden="true"></span>
+        </button>
+
+        <div class="market-filter-group-body">
+          <!-- Decorative dual slider to match the design (no JS) -->
+          <div class="market-filter-range-display" role="img" aria-label="Price range from 20% to 80%">
+            <span class="market-filter-thumb market-filter-thumb--left" aria-hidden="true"></span>
+            <span class="market-filter-thumb market-filter-thumb--right" aria-hidden="true"></span>
+            <span class="market-filter-bar market-filter-bar--active" aria-hidden="true"></span>
+          </div>
+
+          <div class="market-filter-price-inputs">
+            <label class="market-filter-field market-filter-field--currency">
+              <span class="market-filter-prefix" aria-hidden="true">$</span>
+              <input type="text" inputmode="numeric" placeholder="From" aria-label="Price from">
+            </label>
+
+            <label class="market-filter-field market-filter-field--currency">
+              <span class="market-filter-prefix" aria-hidden="true">$</span>
+              <input type="text" inputmode="numeric" placeholder="To" aria-label="Price to">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Exterior -->
+      <section class="market-filter-group" aria-labelledby="exterior-heading">
+        <button class="market-filter-group-toggle" type="button" aria-expanded="true" id="exterior-heading">
+          <span>Exterior</span>
+          <span class="market-filter-caret" aria-hidden="true"></span>
+        </button>
+
+        <div class="market-filter-group-body">
+          <ul class="market-filter-options">
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" checked />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Factory New</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Minimal Wear</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Field-Tested</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Well-Worn</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Battle Scarred</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Rarity -->
+      <section class="market-filter-group" aria-labelledby="rarity-heading">
+        <button class="market-filter-group-toggle" type="button" aria-expanded="true" id="rarity-heading">
+          <span>Rarity</span>
+          <span class="market-filter-caret market-filter-caret--up" aria-hidden="true"></span>
+        </button>
+
+        <div class="market-filter-group-body">
+          <ul class="market-filter-options">
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Mil-Spec</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Restricted</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" checked />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Classified</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Covert</span>
+              </label>
+            </li>
+            <li class="market-filter-option">
+              <label class="market-filter-check">
+                <input type="checkbox" />
+                <span class="market-filter-box" aria-hidden="true"></span>
+                <span class="market-filter-label">Extraordinary</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Load more -->
+      <footer class="market-filter-footer">
+        <button class="market-filter-btn-load" type="button">Load More</button>
+      </footer>
+    </aside>
+
+    <!-- Market Content -->
+    <div class="market_items_market__content">
+      <section class="market_items_market__grid">
+
+      <!-- CARD 1 -->
+      <article class="market_items_item_card" aria-label="AK-47 BloodSport">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>ST AK‑47</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">BloodSport</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <!-- replace src with your local asset -->
+          <img class="market_items_item_card__img" src="images/items/AK-47_Vulcan.webp" alt="AK‑47 BloodSport" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price">
+            <span class="market_items_toman_icon">
+              <svg viewBox="0 0 256.000000 256.000000">
+                <g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+                  <path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/>
+                  <path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/>
+                  <path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/>
+                  <path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/>
+                  <path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/>
+                  <path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/>
+                </g>
+              </svg>
+            </span>
+            2 291.12
+          </div>
+          <div class="market_items_subprice">Steam: 
+            <span class="market_items_toman_icon">
+              <svg viewBox="0 0 256.000000 256.000000">
+                <g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none">
+                  <path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/>
+                  <path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/>
+                  <path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/>
+                  <path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/>
+                  <path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/>
+                  <path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/>
+                </g>
+              </svg>
+            </span>
+            2 912.25
+          </div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AK‑47 BloodSport to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 2 -->
+      <article class="market_items_item_card" aria-label="Gut Knife Fade">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Gut Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Fade</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/Karambit_Lore.webp" alt="Gut Knife Fade" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Gut Knife Fade to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 3 -->
+      <article class="market_items_item_card" aria-label="AK-47 BloodSport">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>ST AK‑47</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">BloodSport</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/AWP_Gungnir.webp" alt="AK‑47 BloodSport" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AK‑47 BloodSport to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 4 -->
+      <article class="market_items_item_card" aria-label="AWP Gungnir">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span>AWP</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Gungnir</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/Desert_Eagle_Printstream.webp" alt="AWP Gungnir" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AWP Gungnir to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 5 -->
+      <article class="market_items_item_card" aria-label="Sport Gloves Big Game">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Sport Gloves</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Big Game</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/M4A1-S_Leaded_Glass.webp" alt="Sport Gloves Big Game" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Sport Gloves Big Game to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 6 -->
+      <article class="market_items_item_card" aria-label="AWP Gungnir">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span>AWP</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Gungnir</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/MAC-10_Disco_Tech.webp" alt="AWP Gungnir" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AWP Gungnir to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 7 -->
+      <article class="market_items_item_card" aria-label="ST AK‑47 BloodSport">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>ST AK‑47</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">BloodSport</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/MAG-7_Justice.webp" alt="AK‑47 BloodSport" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AK‑47 BloodSport to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 8 -->
+      <article class="market_items_item_card" aria-label="Flip Knife Blue Steel">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Flip Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Blue Steel</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/USP-S_Jawbreaker.webp" alt="Flip Knife Blue Steel" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Flip Knife Blue Steel to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 9 -->
+      <article class="market_items_item_card" aria-label="Sport Gloves Big Game">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Sport Gloves</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Big Game</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/AK-47_Vulcan.webp" alt="Sport Gloves Big Game" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Sport Gloves Big Game to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 10 -->
+      <article class="market_items_item_card" aria-label="Gut Knife Fade (Red)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Gut Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Fade</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/Karambit_Lore.webp" alt="Gut Knife Fade" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Gut Knife Fade to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 11 -->
+      <article class="market_items_item_card" aria-label="Sport Gloves Big Game (Gold)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Sport Gloves</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Big Game</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/AWP_Gungnir.webp" alt="Sport Gloves Big Game" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Sport Gloves Big Game to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 12 -->
+      <article class="market_items_item_card" aria-label="Gut Knife Fade (Pink)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Gut Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Fade</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/Desert_Eagle_Printstream.webp" alt="Gut Knife Fade" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Gut Knife Fade to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 13 -->
+      <article class="market_items_item_card" aria-label="Flip Knife Blue Steel (AWP row)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Flip Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Blue Steel</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/M4A1-S_Leaded_Glass.webp" alt="Flip Knife Blue Steel" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Flip Knife Blue Steel to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 14 -->
+      <article class="market_items_item_card" aria-label="AWP Gungnir (bottom row)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span>AWP</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Gungnir</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/MAC-10_Disco_Tech.webp" alt="AWP Gungnir" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add AWP Gungnir to cart">Add to Cart</button>
+        </div>
+      </article>
+
+      <!-- CARD 15 -->
+      <article class="market_items_item_card" aria-label="Flip Knife Blue Steel (curve)">
+        <header class="market_items_item_card__meta">
+          <div class="market_items_left">
+            <span class="market_items_badge market_items_star" aria-hidden="true">★</span>
+            <span>Flip Knife</span>
+          </div>
+          <span>FN / 0.212</span>
+        </header>
+        <h3 class="market_items_item_card__title">Blue Steel</h3>
+        <div class="market_items_item_card__media">
+          <div class="market_items_item_card__stage" aria-hidden="true"></div>
+          <img class="market_items_item_card__img" src="images/items/MAG-7_Justice.webp" alt="Flip Knife Blue Steel" />
+        </div>
+        <div class="market_items_item_card__price">
+          <div class="market_items_price"><span class="market_items_toman_icon"><svg viewBox="0 0 256.000000 256.000000"><g transform="translate(0.000000,256.000000) scale(0.100000,-0.100000)" fill="currentColor" stroke="none"><path d="M627 2382 c-26 -26 -47 -52 -47 -58 0 -5 20 -30 45 -54 l45 -44 53 52 52 52 -50 50 -50 50 -48 -48z"/><path d="M1075 2248 c-16 -6 -45 -17 -63 -24 l-32 -13 19 -49 c48 -122 65 -303 36 -399 -30 -101 -111 -177 -225 -210 -47 -13 -73 -14 -171 -6 -97 9 -125 15 -169 39 -55 30 -100 79 -127 141 -27 59 -24 244 5 350 12 45 22 86 22 91 0 8 -23 19 -116 58 -14 6 -59 -134 -74 -226 -41 -265 32 -460 208 -549 161 -81 429 -79 595 6 60 30 138 106 166 162 70 137 72 378 4 581 -19 59 -30 65 -78 48z"/><path d="M2007 1462 l-47 -48 53 -52 53 -52 49 50 49 50 -49 50 c-27 28 -52 50 -55 50 -3 0 -27 -22 -53 -48z"/><path d="M2282 1467 c-23 -23 -42 -47 -42 -53 0 -5 22 -31 48 -57 l48 -47 47 48 c26 26 47 52 47 57 0 13 -82 95 -95 95 -6 0 -30 -19 -53 -43z"/><path d="M112 1140 c3 -360 3 -366 27 -418 48 -107 152 -165 296 -166 59 0 79 4 124 29 29 16 65 44 78 62 l25 33 50 -45 c69 -62 142 -88 249 -89 79 -1 90 1 135 29 61 38 94 94 104 178 10 82 -4 166 -39 236 -54 104 -128 150 -245 151 -129 0 -202 -60 -286 -235 -27 -55 -61 -112 -77 -126 -69 -65 -160 -81 -225 -41 -65 40 -68 58 -68 354 l0 264 -76 74 -75 75 3 -365z m874 -179 c59 -36 92 -157 60 -219 -37 -72 -157 -63 -250 19 -25 22 -46 47 -46 55 0 41 63 124 115 152 31 17 87 14 121 -7z"/><path d="M2300 1163 c-30 -9 -56 -17 -58 -18 -1 -1 5 -44 14 -96 20 -116 15 -223 -12 -270 -28 -48 -66 -58 -230 -58 -158 -1 -154 -3 -154 74 0 43 -26 140 -54 200 -67 147 -196 203 -324 139 -93 -46 -165 -159 -178 -281 -21 -202 81 -293 326 -293 90 0 91 -1 60 -66 -45 -92 -174 -182 -314 -218 -32 -9 -61 -17 -63 -20 -2 -2 8 -33 22 -69 l26 -65 62 14 c102 24 236 95 300 159 62 62 115 158 124 224 l6 41 141 0 c157 0 231 13 298 53 112 65 151 221 113 443 -19 111 -23 124 -38 123 -7 0 -37 -8 -67 -16z m-669 -186 c49 -32 81 -103 87 -193 l5 -74 -79 0 c-143 0 -198 32 -196 114 0 66 19 111 58 146 42 36 78 39 125 7z"/></g></svg></span>2 291.12</div>
+          <div class="market_items_subprice">Steam: $ 2 912.25</div>
+        </div>
+        <div class="market_items_item_card__cta">
+          <button class="market_items_btn" aria-label="Add Flip Knife Blue Steel to cart">Add to Cart</button>
+        </div>
+      </article>
+
+    </section>
+    </div> <!-- Close market_items_market__content -->
+  </main>
+</body>
+</html>
