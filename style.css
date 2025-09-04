@@ -1,0 +1,98 @@
+/* General body styling */
+body {
+    background-color: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Main toolbar container */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+    padding: 10px;
+}
+
+/* Left and right sections of the toolbar */
+.toolbar-left, .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Common style for dropdowns and search bar */
+.search-bar,
+.dropdown {
+    background-color: #232323;
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #E0E0E0;
+    cursor: pointer;
+}
+
+/* Search bar specific styles */
+.search-bar {
+    padding: 10px 15px;
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #E0E0E0;
+    font-size: 16px;
+}
+
+.search-bar input::placeholder {
+    color: #888;
+}
+
+/* Dropdown specific styles */
+.dropdown span {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.dropdown .fa-chevron-down {
+    font-size: 12px;
+}
+
+/* Pistol icon - since it's a special one, we might need to adjust it */
+.fa-gun {
+    /* Using a unicode character as a fallback or specific class if using a custom icon font */
+    /* For Font Awesome, a placeholder like a star or another relevant icon might be used if a pistol is not available */
+}
+
+
+/* Cart button styling */
+.cart-button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.cart-button:hover {
+    background-color: #155ab6;
+}
+
+.cart-button span {
+    letter-spacing: 0.5px;
+}
